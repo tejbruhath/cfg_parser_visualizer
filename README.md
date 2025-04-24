@@ -5,6 +5,7 @@ This project implements a natural language parser using Context-Free Grammar (CF
 ## Table of Contents
 
 - [Overview](#overview)
+- [System Architecture](#system-architecture)
 - [Components](#components)
 - [Implementation Details](#implementation-details)
 - [Dependencies](#dependencies)
@@ -15,6 +16,7 @@ This project implements a natural language parser using Context-Free Grammar (CF
 - [Grammar Rules](#grammar-rules)
 - [Future Improvements](#future-improvements)
 - [Algorithms](#algorithms)
+- [Metrics](#metrics)
 
 ## Overview
 
@@ -25,6 +27,100 @@ The CFG Parser is a web application that:
 3. Applies CFG rules to parse the sentence
 4. Generates a visual parse tree using Graphviz
 5. Supports both top-down and bottom-up parsing strategies
+
+## System Architecture
+
+The CFG Parser follows a modular architecture with clear separation of concerns:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            Web Interface                                 │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │
+│  │  Input Form │  │  Parse Tree │  │  POS Tags   │  │  Error Msg  │    │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘    │
+└─────────┼────────────────┼─────────────────┼─────────────────┼─────────┘
+          │                │                 │                 │
+          ▼                ▼                 ▼                 ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            Flask Server                                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │
+│  │  /parse     │  │  /static    │  │  /          │  │  Error      │    │
+│  │  Endpoint   │  │  Files      │  │  Index      │  │  Handling   │    │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘    │
+└─────────┼────────────────┼─────────────────┼─────────────────┼─────────┘
+          │                │                 │                 │
+          ▼                ▼                 ▼                 ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            Core Components                               │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │
+│  │  Neural     │  │  Parser     │  │  Grammar    │  │  Tree       │    │
+│  │  Network    │  │  Engine     │  │  Rules      │  │  Visualizer │    │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘    │
+└─────────┼────────────────┼─────────────────┼─────────────────┼─────────┘
+          │                │                 │                 │
+          ▼                ▼                 ▼                 ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            Data Processing                               │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐    │
+│  │  Text       │  │  POS        │  │  Vocabulary │  │  Parse      │    │
+│  │  Preprocess │  │  Tagging    │  │  Mapping    │  │  Tree       │    │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘    │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Component Interactions
+
+1. **Web Interface Layer**
+
+   - HTML/CSS/JavaScript frontend
+   - Handles user input and display
+   - Communicates with Flask server via REST API
+
+2. **Flask Server Layer**
+
+   - REST API endpoints for parsing requests
+   - Static file serving
+   - Error handling and logging
+   - Coordinates between frontend and core components
+
+3. **Core Components Layer**
+
+   - Neural Network: POS tagging model
+   - Parser Engine: Implements top-down and bottom-up parsing
+   - Grammar Rules: Defines valid sentence structures
+   - Tree Visualizer: Generates parse tree diagrams
+
+4. **Data Processing Layer**
+   - Text preprocessing and tokenization
+   - POS tagging using trained model
+   - Vocabulary and tag mapping
+   - Parse tree construction
+
+### Data Flow
+
+1. User inputs a sentence through the web interface
+2. Request is sent to Flask server's `/parse` endpoint
+3. Text preprocessing is applied to the input
+4. Neural network generates POS tags
+5. Parser engine applies grammar rules
+6. Parse tree is constructed
+7. Tree visualizer generates diagram
+8. Results are returned to web interface
+
+### File Organization
+
+```
+cfg_parser/
+├── app.py                 # Flask application and main server
+├── parser_trainer.py      # Neural network implementation
+├── static/               # Static files
+│   ├── word_to_idx.json  # Vocabulary mappings
+│   ├── tag_to_idx.json   # POS tag mappings
+│   └── parser_model.pth  # Trained model
+├── templates/            # HTML templates
+│   └── index.html       # Web interface
+└── requirements.txt      # Project dependencies
+```
 
 ## Components
 
@@ -396,3 +492,31 @@ where:
 - Implements a recursive tree traversal algorithm
 - Generates DOT language representation of parse trees
 - Converts DOT to PNG for display
+
+## Metrics
+
+The project tracks several key metrics to evaluate model performance and system efficiency:
+
+### Model Performance Metrics
+
+- **Loss and Accuracy**: Standard metrics for model training and validation
+- **Per-class Accuracy**: Detailed accuracy for each POS tag
+- **Confusion Matrix**: Visual representation of prediction errors
+- **Classification Report**: Precision, recall, and F1-score for each POS tag
+
+### System Performance Metrics
+
+- **Memory Usage**: Tracks RAM consumption during training and inference
+- **Inference Time**: Measures processing speed for each epoch
+- **Training Time**: Total time taken for model training
+
+### Visualization
+
+All metrics are visualized in a comprehensive dashboard (`training_metrics.png`) that includes:
+
+1. Training and validation loss/accuracy curves
+2. Memory usage over time
+3. Inference time per epoch
+4. Final confusion matrix
+
+Detailed metrics are also saved in `metrics_history.json` for further analysis.
