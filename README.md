@@ -141,7 +141,7 @@ pip install flask nltk torch networkx matplotlib
 - Linux: `sudo apt-get install graphviz`
 - macOS: `brew install graphviz`
 
-3. Download NLTK data:
+3 . Download NLTK data:
 
 ```python
 import nltk
