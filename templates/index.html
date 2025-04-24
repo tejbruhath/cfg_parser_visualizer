@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grammar Parser Visualizer</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+
+      .container {
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .input-section {
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        box-sizing: border-box;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+
+      button {
+        padding: 12px 24px;
+        font-size: 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        background-color: #4caf50;
+        color: white;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+
+      .result-section {
+        margin-top: 30px;
+        text-align: center;
+      }
+
+      #parseTree {
+        max-width: 100%;
+        margin-top: 20px;
+      }
+
+      .tags {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+      }
+
+      .error {
+        color: #dc3545;
+        margin-top: 10px;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      .loading::after {
+        content: "";
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Grammar Parser Visualizer</h1>
+
+      <div class="input-section">
+        <input
+          type="text"
+          id="sentence"
+          placeholder="Enter a sentence to parse..."
+          value="the cat sat on the mat"
+        />
+
+        <div class="button-group">
+          <button onclick="parse('top-down')">Top-Down Parse</button>
+          <button onclick="parse('bottom-up')">Bottom-Up Parse</button>
+        </div>
+      </div>
+
+      <div class="loading" id="loading"></div>
+
+      <div class="result-section">
+        <div class="tags" id="tags"></div>
+        <img id="parseTree" style="display: none" />
+        <div class="error" id="error"></div>
+      </div>
+    </div>
+
+    <script>
+      async function parse(type) {
+        const sentence = document.getElementById("sentence").value.trim();
+        if (!sentence) {
+          showError("Please enter a sentence");
+          return;
+        }
+
+        // Show loading
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("parseTree").style.display = "none";
+        document.getElementById("tags").innerHTML = "";
+        document.getElementById("error").innerHTML = "";
+
+        try {
+          const response = await fetch("/parse", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              sentence: sentence,
+              type: type,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            // Display POS tags
+            const tagsHtml = `<strong>POS Tags:</strong> ${data.tags.join(
+              " "
+            )}`;
+            document.getElementById("tags").innerHTML = tagsHtml;
+
+            // Display parse tree
+            const parseTree = document.getElementById("parseTree");
+            parseTree.src = data.image + "?" + new Date().getTime(); // Cache busting
+            parseTree.style.display = "block";
+          } else {
+            showError(data.error);
+          }
+        } catch (error) {
+          showError("An error occurred while parsing the sentence");
+        } finally {
+          document.getElementById("loading").style.display = "none";
+        }
+      }
+
+      function showError(message) {
+        document.getElementById("error").innerHTML = message;
+        document.getElementById("loading").style.display = "none";
+      }
+    </script>
+  </body>
+</html>
